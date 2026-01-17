@@ -204,7 +204,7 @@
     const lintList = document.getElementById('lintList');
 
     lintBtn.addEventListener('click', async () => {
-      const response = await fetch('/api/lint', {
+      const response = await fetch('/lint', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: promptInput.value })
@@ -240,7 +240,7 @@
     const diffOutput = document.getElementById('diffOutput');
 
     async function loadVersions() {
-      const response = await fetch('/api/versions/list');
+      const response = await fetch('/versions/list');
       const payload = await response.json();
       const versions = payload.versions || [];
       versionsTable.innerHTML = '';
@@ -269,7 +269,7 @@
         alert('Please provide a label for the version.');
         return;
       }
-      await fetch('/api/versions/save', {
+      await fetch('/versions/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ label, text: compareInput.value })
@@ -285,7 +285,7 @@
         alert('Select two versions to diff.');
         return;
       }
-      const response = await fetch('/api/versions/diff', {
+      const response = await fetch('/versions/diff', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ a: versionA.value, b: versionB.value })
@@ -295,7 +295,7 @@
     });
 
     async function loadRules() {
-      const response = await fetch('/api/rules');
+      const response = await fetch('/rules');
       const payload = await response.json();
       const rules = payload.rules || [];
       const rulesTable = document.getElementById('rulesTable');
