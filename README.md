@@ -24,6 +24,14 @@ Prompts in. Discipline out.
 python -m promptforge lint examples/example_prompt.txt
 ```
 
+## Web UI
+
+```bash
+python -m promptforge.web
+```
+
+Open http://127.0.0.1:8000 to access the Write, Compare, and Rules tabs.
+
 ## Example output
 
 ```text

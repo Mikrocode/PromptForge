@@ -12,6 +12,7 @@ from promptforge.issues import Issue
 @dataclass(frozen=True)
 class Rule:
     rule_id: str
+    name: str
     description: str
 
     def check(self, content: str) -> list[Issue]:
@@ -45,6 +46,7 @@ class MissingOutputFormatRule(Rule):
         return [
             Issue(
                 rule_id=self.rule_id,
+                severity="error",
                 message="Missing explicit output format (e.g., bullets, JSON, prose).",
                 line=1,
             )
@@ -63,6 +65,7 @@ class VagueVerbsRule(Rule):
                 issues.append(
                     Issue(
                         rule_id=self.rule_id,
+                        severity="error",
                         message=f"Vague verb '{match.group(0)}' found; be specific.",
                         line=_line_number(content, match.start()),
                     )
@@ -94,6 +97,7 @@ class ContradictoryConstraintsRule(Rule):
             return [
                 Issue(
                     rule_id=self.rule_id,
+                    severity="error",
                     message="Contradictory constraints: concise and detailed requirements conflict.",
                     line=1,
                 )
@@ -135,6 +139,7 @@ class MissingAudienceRule(Rule):
         return [
             Issue(
                 rule_id=self.rule_id,
+                severity="error",
                 message="Missing audience definition (who the prompt is for).",
                 line=1,
             )
@@ -177,6 +182,7 @@ class MissingLengthConstraintRule(Rule):
         return [
             Issue(
                 rule_id=self.rule_id,
+                severity="error",
                 message="Missing length or scope constraint (e.g., word count, max length).",
                 line=1,
             )
@@ -184,9 +190,29 @@ class MissingLengthConstraintRule(Rule):
 
 
 RULES: Iterable[Rule] = (
-    MissingOutputFormatRule("PF001", "Missing explicit output format"),
-    VagueVerbsRule("PF002", "Vague verbs"),
-    ContradictoryConstraintsRule("PF003", "Contradictory constraints"),
-    MissingAudienceRule("PF004", "Missing audience definition"),
-    MissingLengthConstraintRule("PF005", "Missing length or scope constraint"),
+    MissingOutputFormatRule(
+        "PF001",
+        "Output format",
+        "Prompt must request an explicit output format.",
+    ),
+    VagueVerbsRule(
+        "PF002",
+        "Vague verbs",
+        "Prompt must avoid vague verbs without measurable targets.",
+    ),
+    ContradictoryConstraintsRule(
+        "PF003",
+        "Contradictory constraints",
+        "Prompt must not contain conflicting constraints.",
+    ),
+    MissingAudienceRule(
+        "PF004",
+        "Audience definition",
+        "Prompt must define the intended audience.",
+    ),
+    MissingLengthConstraintRule(
+        "PF005",
+        "Length or scope",
+        "Prompt must include length or scope constraints.",
+    ),
 )
