@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PromptForge</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      background: #0f1216;
+      color: #e6edf3;
+    }
+    header {
+      padding: 16px 24px;
+      border-bottom: 1px solid #2d333b;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 12px 24px;
+      border-bottom: 1px solid #2d333b;
+      background: #161b22;
+    }
+    .tab {
+      background: transparent;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 6px 12px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    .tab.active {
+      background: #238636;
+      border-color: #2ea043;
+      color: #fff;
+    }
+    main {
+      padding: 24px;
+    }
+    .panel {
+      display: none;
+    }
+    .panel.active {
+      display: block;
+    }
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 12px;
+      border-radius: 6px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    button.primary {
+      background: #238636;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: #21262d;
+      color: #c9d1d9;
+      border: 1px solid #30363d;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .results {
+      margin-top: 16px;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 12px;
+      background: #0d1117;
+    }
+    .results ul {
+      padding-left: 18px;
+      margin: 8px 0 0 0;
+    }
+    .summary {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .diff {
+      white-space: pre-wrap;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      min-height: 200px;
+    }
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    input[type="text"], select {
+      background: #0d1117;
+      color: #c9d1d9;
+      border: 1px solid #30363d;
+      padding: 8px 10px;
+      border-radius: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+    th, td {
+      border-bottom: 1px solid #30363d;
+      padding: 8px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>PromptForge</h1>
+  </header>
+  <nav class="tabs">
+    <button class="tab active" data-tab="write">Write</button>
+    <button class="tab" data-tab="compare">Compare</button>
+    <button class="tab" data-tab="rules">Rules</button>
+  </nav>
+  <main>
+    <section class="panel active" id="write">
+      <div class="row" style="margin-bottom: 12px;">
+        <button class="primary" id="lintBtn">Lint</button>
+      </div>
+      <textarea id="promptInput" placeholder="Paste or type a prompt..."></textarea>
+      <div class="results" id="lintResults">
+        <div class="summary" id="lintSummary">Errors: 0 | Warnings: 0</div>
+        <ul id="lintList"></ul>
+      </div>
+    </section>
+
+    <section class="panel" id="compare">
+      <div class="row" style="margin-bottom: 12px;">
+        <input type="text" id="versionLabel" placeholder="Version label" />
+        <button class="primary" id="saveVersionBtn">Save as version</button>
+        <button class="secondary" id="refreshVersionsBtn">Refresh list</button>
+      </div>
+      <textarea id="compareInput" placeholder="Paste or type a prompt to save..."></textarea>
+      <table>
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Label</th>
+            <th>File ID</th>
+          </tr>
+        </thead>
+        <tbody id="versionsTable"></tbody>
+      </table>
+      <div class="row" style="margin-top: 16px;">
+        <select id="versionA"></select>
+        <select id="versionB"></select>
+        <button class="primary" id="diffBtn">Show diff</button>
+      </div>
+      <div class="diff" id="diffOutput" style="margin-top: 12px;"></div>
+    </section>
+
+    <section class="panel" id="rules">
+      <table>
+        <thead>
+          <tr>
+            <th>Rule ID</th>
+            <th>Name</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody id="rulesTable"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const tabs = document.querySelectorAll('.tab');
+    const panels = document.querySelectorAll('.panel');
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        tabs.forEach((t) => t.classList.remove('active'));
+        panels.forEach((p) => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    const lintBtn = document.getElementById('lintBtn');
+    const promptInput = document.getElementById('promptInput');
+    const lintSummary = document.getElementById('lintSummary');
+    const lintList = document.getElementById('lintList');
+
+    lintBtn.addEventListener('click', async () => {
+      const response = await fetch('/api/lint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: promptInput.value })
+      });
+      const payload = await response.json();
+      const issues = payload.issues || [];
+      const errors = issues.filter((item) => item.severity === 'error').length;
+      const warnings = issues.filter((item) => item.severity === 'warn').length;
+      lintSummary.textContent = `Errors: ${errors} | Warnings: ${warnings}`;
+      lintList.innerHTML = '';
+      if (issues.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = 'No lint errors found.';
+        lintList.appendChild(li);
+        return;
+      }
+      issues.forEach((issue) => {
+        const li = document.createElement('li');
+        const location = issue.line ? ` (line ${issue.line}${issue.column ? ':' + issue.column : ''})` : '';
+        li.textContent = `${issue.severity.toUpperCase()} ${issue.rule_id}: ${issue.message}${location}`;
+        lintList.appendChild(li);
+      });
+    });
+
+    const versionLabel = document.getElementById('versionLabel');
+    const saveVersionBtn = document.getElementById('saveVersionBtn');
+    const refreshVersionsBtn = document.getElementById('refreshVersionsBtn');
+    const compareInput = document.getElementById('compareInput');
+    const versionsTable = document.getElementById('versionsTable');
+    const versionA = document.getElementById('versionA');
+    const versionB = document.getElementById('versionB');
+    const diffBtn = document.getElementById('diffBtn');
+    const diffOutput = document.getElementById('diffOutput');
+
+    async function loadVersions() {
+      const response = await fetch('/api/versions/list');
+      const payload = await response.json();
+      const versions = payload.versions || [];
+      versionsTable.innerHTML = '';
+      versionA.innerHTML = '';
+      versionB.innerHTML = '';
+      versions.forEach((item) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${item.timestamp}</td><td>${item.label}</td><td>${item.id}</td>`;
+        versionsTable.appendChild(row);
+
+        const optionA = document.createElement('option');
+        optionA.value = item.id;
+        optionA.textContent = `${item.label} (${item.timestamp})`;
+        versionA.appendChild(optionA);
+
+        const optionB = document.createElement('option');
+        optionB.value = item.id;
+        optionB.textContent = `${item.label} (${item.timestamp})`;
+        versionB.appendChild(optionB);
+      });
+    }
+
+    saveVersionBtn.addEventListener('click', async () => {
+      const label = versionLabel.value.trim();
+      if (!label) {
+        alert('Please provide a label for the version.');
+        return;
+      }
+      await fetch('/api/versions/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label, text: compareInput.value })
+      });
+      versionLabel.value = '';
+      await loadVersions();
+    });
+
+    refreshVersionsBtn.addEventListener('click', loadVersions);
+
+    diffBtn.addEventListener('click', async () => {
+      if (!versionA.value || !versionB.value) {
+        alert('Select two versions to diff.');
+        return;
+      }
+      const response = await fetch('/api/versions/diff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ a: versionA.value, b: versionB.value })
+      });
+      const payload = await response.json();
+      diffOutput.textContent = payload.diff || '';
+    });
+
+    async function loadRules() {
+      const response = await fetch('/api/rules');
+      const payload = await response.json();
+      const rules = payload.rules || [];
+      const rulesTable = document.getElementById('rulesTable');
+      rulesTable.innerHTML = '';
+      rules.forEach((rule) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${rule.rule_id}</td><td>${rule.name}</td><td>${rule.description}</td>`;
+        rulesTable.appendChild(row);
+      });
+    }
+
+    loadVersions();
+    loadRules();
+  </script>
+</body>
+</html>
