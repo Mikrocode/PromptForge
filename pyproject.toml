@@ -1,0 +1,14 @@
+[project]
+name = "promptforge"
+version = "0.1.0"
+description = "Static prompt linter that enforces prompt discipline."
+requires-python = ">=3.11"
+readme = "README.md"
+license = { file = "LICENSE" }
+
+[project.scripts]
+promptforge = "promptforge.cli:main"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
