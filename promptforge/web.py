@@ -72,7 +72,7 @@ def _load_text(file_id: str) -> str:
 class PromptForgeHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler signature
         parsed = urlparse(self.path)
-        if parsed.path == "/":
+        if parsed.path in ("/", "/index.html"):
             index_path = ASSETS_DIR / "index.html"
             content = index_path.read_bytes()
             self.send_response(HTTPStatus.OK)
