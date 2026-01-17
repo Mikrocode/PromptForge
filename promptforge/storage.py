@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 
 DATA_DIR = Path(os.getenv("PROMPTFORGE_DATA_DIR", "/tmp/promptforge-data"))
-_VERSION_PATTERN = re.compile(r"^[0-9]{14}_[A-Za-z0-9_-]+\\.txt$")
+_VERSION_PATTERN = re.compile(r"^[0-9]{14}_[A-Za-z0-9_-]+\.txt$")
 
 
 def sanitize_label(label: str) -> str:
